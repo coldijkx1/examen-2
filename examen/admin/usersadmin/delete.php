@@ -1,0 +1,82 @@
+<?php
+// gebruik sessies
+session_start();
+// als de user niet is ingelogd stuur naar deze pagina:
+if (!isset($_SESSION['loggedin'])) {
+	header('Location: ../../index.html');
+	exit;
+}
+
+// Process verwijder operaties na confirmatie
+if(isset($_POST["id"]) && !empty($_POST["id"])){
+    // gebruik
+    require_once 'config.php';
+    
+    // bereid een select statement voor
+    $sql = "DELETE FROM account WHERE id = ?";
+    
+    if($stmt = mysqli_prepare($link, $sql)){
+        // Bind variabelen aan de prepared statement als parameters
+        mysqli_stmt_bind_param($stmt, "i", $param_id);
+        
+        // zet parameters
+        $param_id = trim($_POST["id"]);
+        
+        // probeer prepared statement te runnen
+        if(mysqli_stmt_execute($stmt)){
+            // Records succesfol verwijderd. Redirect naar landing pagina
+            header("location: index.php");
+            exit();
+        } else{
+            echo "Oops! Something went wrong. Please try again later.";
+        }
+    }
+     
+    // sluit statement
+    mysqli_stmt_close($stmt);
+} else{
+    // Check of id parameter bestaat
+    if(empty(trim($_GET["id"]))){
+        // URL heeft geen id parameter. Redirect naar error pagina
+        header("location: error.php");
+        exit();
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Record</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
+    <style type="text/css">
+        .wrapper{
+            width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="page-header">
+                        <h1>Verwijderen</h1>
+                    </div>
+                    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                        <div class="alert alert-danger fade in">
+                            <input type="hidden" name="id" value="<?php echo trim($_GET["id"]); ?>"/>
+                            <p>Weet je zeker dat je dit wilt verwijderen?</p><br>
+                            <p>
+                                <input type="submit" value="Yes" class="btn btn-danger">
+                                <a href="index.php" class="btn btn-default">Nee</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>        
+        </div>
+    </div>
+</body>
+</html>
